@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { productId: string } }
+  context: { params: Promise<{ productId: string }> }
 ) {
   try {
     const token = req.headers.get("token");
@@ -11,13 +11,15 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { productId } = params;
+    const { productId } = await context.params;
 
     const response = await fetch(
       `https://ecommerce.routemisr.com/api/v1/wishlist/${productId}`,
       {
         method: "DELETE",
-        headers: { token },
+        headers: {
+          token,
+        },
       }
     );
 
@@ -26,7 +28,10 @@ export async function DELETE(
     return NextResponse.json(data, { status: response.status });
   } catch (err) {
     return NextResponse.json(
-      { message: "Server error", error: String(err) },
+      {
+        message: "Server error",
+        error: String(err),
+      },
       { status: 500 }
     );
   }
