@@ -30,15 +30,20 @@ export const authOptions: AuthOptions = {
 
         const payload = await response.json();
 
+        console.log("LOGIN PAYLOAD:", payload);
+
         if (!response.ok || !payload.token) {
           return null;
         }
 
+        const user = payload.user || payload.data || {};
+
         return {
-          id: payload.user?._id || payload.user?.id || "user-id",
-          name: payload.user?.name || "User",
-          email: payload.user?.email || credentials.email,
-          token: payload.token,
+          id: user._id || user.id || "user-id",
+          name: user.name || "User",
+          email: user.email || credentials.email,
+          accessToken: payload.token,
+          userData: user,
         };
       },
     }),
@@ -51,13 +56,15 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = (user as any).token;
+        token.accessToken = (user as any).accessToken;
+        token.userData = (user as any).userData;
       }
       return token;
     },
 
     async session({ session, token }) {
       (session as any).token = token.accessToken;
+      (session as any).user = token.userData;
       return session;
     },
   },
